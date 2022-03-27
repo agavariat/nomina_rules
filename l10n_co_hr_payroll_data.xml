@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
 
+    <!-- FIN CATEGOTIAS NOMINA COLOMBIANA-->
 <record id="hr_payroll_categories_SMMLV" model="hr.salary.rule.category">
         <field name="name">Salario mínimo mensual legal vigente</field>
         <field name="code">SMMLV</field>
@@ -211,16 +212,16 @@
     <field name="code">total_liq</field>
 </record>
     
-        <record id="hr_rule_salario_minimo" model="hr.salary.rule">
-            <field name="name">Salario mínimo mensual legal vigente</field>
-            <field name="sequence" eval="1"/>
-            <field name="code">SMMLV</field>
-            <field name="rule_type">none</field>
-            <field name="category_id" ref="hr_payroll_categories_SMMLV"/>
-            <field name="condition_select">none</field>
-            <field name="amount_select">fix</field>
-            <field name="amount_fix">908526</field>
-        </record>
+<record id="hr_rule_salario_minimo" model="hr.salary.rule">
+    <field name="name">Salario mínimo mensual legal vigente</field>
+    <field name="sequence" eval="1"/>
+    <field name="code">SMMLV</field>
+    <field name="rule_type">none</field>
+    <field name="category_id" ref="hr_payroll_categories_SMMLV"/>
+    <field name="condition_select">none</field>
+    <field name="amount_select">fix</field>
+    <field name="amount_fix">908526</field>
+</record>
 <!-- valor de UVT para calculo de retefuente-->
 <record id="hr_rule_salario_UVT" model="hr.salary.rule">
             <field name="name">Valor de la Unidad de Valor Tributario (UVT)</field>
@@ -253,10 +254,10 @@
             <field name="rule_type">none</field>
             <field name="category_id" ref="hr_payroll_categories_base_aux"/>
             <field name="condition_select">python</field>
-            <field name="condition_python">if payslip.is_liquid:
+            <field name="condition_python">if payslip.is_liquid: 
     result = contract.wage &lt;= (2*employee.company.salario_minimo) or False</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result=employee.company.aux_transporte</field>
+            <field name="amount_python_compute">result = employee.company.aux_transporte</field>            
         </record>
 
         <record id="hr_rule_base_variable" model="hr.salary.rule">
@@ -326,7 +327,7 @@ for slip in employee.slip_ids:
             <field name="amount_python_compute">result=categories.base1</field>
         </record>
 
-        <record id="hr_rule_Prima_de_ser_2" model="hr.salary.rule">
+        <!--record id="hr_rule_Prima_de_ser_2" model="hr.salary.rule">
             <field name="name">Prima De Servicio.</field>
             <field name="sequence" eval="45"/>
             <field name="code">1508</field>
@@ -335,12 +336,12 @@ for slip in employee.slip_ids:
             <field name="account_credit" ref="l10n_co.co_puc_261020"/>
             <field name="category_id" ref="hr_payroll_categories_pri_liq"/>
             <field name="condition_select">python</field>
-            <field name="condition_python">if payslip.date_to.day > 15 and (payslip.date_to.month == 6 or payslip.date_to.month == 12):
+            <field name="condition_python">if payslip.is_liquid:
     result = True
             </field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = contract._calculate_payment_prima(payslip.date_to) + categories.pro_pri</field>
-        </record>
+            <field name="amount_python_compute">result = round(payslip.no_prima_liq * inputs.sal_prom.amount / 360)</field>
+        </record-->
 
         <record id="hr_rule_cesan" model="hr.salary.rule">
             <field name="name">Cesantías</field>
@@ -384,7 +385,6 @@ for slip in employee.slip_ids:
             <field name="amount_python_compute">result = contract.calculate_cesantias() + categories.pcesan</field>
         </record>
 
-
 <record id="hr_rule_incesan" model="hr.salary.rule">
             <field name="name">Intereses Cesantías</field>
             <field name="sequence" eval="707"/>
@@ -399,7 +399,6 @@ for slip in employee.slip_ids:
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result = round(contract.calculate_int_cesantias() + categories.inpcesan)</field>
         </record>
-
 
 <record id="hr_rule_incesan_ven" model="hr.salary.rule">
             <field name="name">Intereses Cesantías</field>
@@ -429,7 +428,7 @@ for slip in employee.slip_ids:
     result = True</field>
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result = round(contract.calculate_int_cesantias() + categories.inpcesan)</field>
-        </record>          
+        </record>    
 
         <record id="hr_rule_vac_adm" model="hr.salary.rule">
             <field name="name">Vacaciones</field>
@@ -441,6 +440,8 @@ for slip in employee.slip_ids:
             <field name="account_credit" ref="l10n_co.co_puc_261015"/>
             <field name="condition_select">python</field>
             <field name="condition_python">if payslip.is_liquid:
+    result = False
+elif payslip.vacaciones_compensadas:
     result = True
 else:
     for i in payslip.worked_days_line_ids:
@@ -493,13 +494,14 @@ else:
             <field name="rule_type">none</field>
             <field name="category_id" ref="hr_payroll_categories_total_liq"/>
             <field name="condition_select">python</field>
-            <field name="condition_python">if payslip.is_liquid: 
-    result = True</field>
+            <field name="condition_python">for i in payslip.worked_days_line_ids:
+    if i.code == "VACACIONES DE DISFRUTE":
+        result = True</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = categories.intcesan + categories.pri_liq + categories.cesan + categories.vac</field>
+            <field name="amount_python_compute">result= contract.calculate_vacations_dis(payslip)</field>
         </record>
     
-        <record id="hr_rule_SALARIO_adm" model="hr.salary.rule">
+<record id="hr_rule_SALARIO_adm" model="hr.salary.rule">
             <field name="name">Salario devengado</field>
             <field name="sequence" eval="100"/>
             <field name="code">1100</field>
@@ -510,10 +512,15 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = worked_days.WORK100</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = round((contract.wage /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days))</field>
+            <field name="amount_python_compute">if worked_days.AUSENCIA_NO_REMUNERADO and worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+    if  worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+        x=worked_days.WORK100.number_of_days-1
+        result = round((contract.wage / 30) * x)
+else:
+    result = round((contract.wage / 30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days))</field>
         </record>
 
-        <record id="hr_rule_SALARIO_ven" model="hr.salary.rule">
+<record id="hr_rule_SALARIO_ven" model="hr.salary.rule">
             <field name="name">Salario devengado</field>
             <field name="sequence" eval="100"/>
             <field name="code">1200</field>
@@ -524,11 +531,16 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = worked_days.WORK100</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = ((contract.wage) /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days)</field>
+            <field name="amount_python_compute">if worked_days.AUSENCIA_NO_REMUNERADO and worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+    if  worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+        x=worked_days.WORK100.number_of_days-1
+        result = round((contract.wage / 30) * x)
+else:
+    result = round((contract.wage / 30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days))</field>
         </record>
 
 
-        <record id="hr_rule_SALARIO_ops" model="hr.salary.rule">
+<record id="hr_rule_SALARIO_ops" model="hr.salary.rule">
 
             <field name="name">Salario devengado</field>
             <field name="sequence" eval="100"/>
@@ -539,10 +551,28 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = worked_days.WORK100</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = ((contract.wage) /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days)</field>
+            <field name="amount_python_compute">if worked_days.AUSENCIA_NO_REMUNERADO and worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+    if  worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+        x=worked_days.WORK100.number_of_days-1
+        result = round((contract.wage / 30) * x)
+else:
+    result = round((contract.wage / 30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days))</field>
         </record>
+
+<record id="hr_rule_bono_epctvs" model="hr.salary.rule">
+            <field name="name">BonoEPCTVs PagoAlimentacionNS</field>
+            <field name="sequence" eval="194"/>
+            <field name="code">2111</field>
+            <field name="rule_type">devengos</field>
+            <field name="category_id" ref="hr_payroll_categories_bon"/>
+            <field name="condition_select">python</field>
+            <field name="condition_python">result = inputs.PagoAlimentacionNS and inputs.PagoAlimentacionNS.amount or False</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = inputs.PagoAlimentacionNS.amount</field>
+        </record>
+
 <!-- up21-->
-        <record id="hr_rule_ajuste_sal_adm" model="hr.salary.rule">
+<record id="hr_rule_ajuste_sal_adm" model="hr.salary.rule">
             <field name="name">Ajuste de salario</field>
             <field name="sequence" eval="193"/>
             <field name="code">1101</field>
@@ -555,7 +585,7 @@ else:
             <field name="amount_python_compute">result=inputs.Ajs.amount</field>
         </record>
 
-        <record id="hr_rule_ajuste_sal_ven" model="hr.salary.rule">
+<record id="hr_rule_ajuste_sal_ven" model="hr.salary.rule">
             <field name="name">Ajuste de salario</field>
             <field name="sequence" eval="193"/>
             <field name="code">1201</field>
@@ -569,7 +599,8 @@ else:
         </record>
 
 
-        <record id="hr_rule_ajuste_sal_ops" model="hr.salary.rule">
+<record id="hr_rule_ajuste_sal_ops" model="hr.salary.rule">
+
             <field name="name">Ajuste de salario</field>
             <field name="sequence" eval="193"/>
             <field name="code">1301</field>
@@ -582,9 +613,22 @@ else:
             <field name="amount_python_compute">result=inputs.Ajs.amount</field>
         </record>
 
-    
+<!--record id="hr_rule_vac_ops" model="hr.salary.rule">
+            <field name="name">Vacaciones disfrute</field>
+            <field name="sequence" eval="712"/>
+            <field name="code">1316</field>
+            <field name="rule_type">devengos</field>
+            <field name="category_id" ref="hr_payroll_categories_vac"/>
+            <field name="account_debit" ref="account_extra.co_puc_720539"/>
+            <field name="condition_select">python</field>
+            <field name="condition_python">for i in payslip.worked_days_line_ids:
+    if i.code == "VACACIONES DE DISFRUTE":
+        result = True</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result= contract.calculate_vacations_dis(payslip)</field>
+        </record-->
 <!-- up 21-->
-        <record id="hr_rule_bon_adm" model="hr.salary.rule">
+<record id="hr_rule_bon_adm" model="hr.salary.rule">
             <field name="name">Bonificaciones</field>
             <field name="sequence" eval="303"/>
             <field name="code">1102</field>
@@ -597,7 +641,7 @@ else:
             <field name="amount_python_compute">result=inputs.BONO.amount</field>
         </record>
 
-        <record id="hr_rule_bon_ven" model="hr.salary.rule">
+<record id="hr_rule_bon_ven" model="hr.salary.rule">
             <field name="name">Bonificaciones</field>
             <field name="sequence" eval="303"/>
             <field name="code">1202</field>
@@ -623,7 +667,7 @@ else:
             <field name="amount_python_compute">result=inputs.BONO.amount</field>
         </record>
 
-        <record id="hr_rule_otros_deven" model="hr.salary.rule">
+<!--record id="hr_rule_otros_deven" model="hr.salary.rule">
             <field name="name">Otros devengos</field>
             <field name="sequence" eval="303"/>
             <field name="code">0010</field>
@@ -633,9 +677,9 @@ else:
             <field name="condition_python">result = inputs.odev and inputs.odev.amount or False</field>
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result=inputs.odev.amount</field>
-        </record>
+        </record-->
 <!-- up 21-->
-        <record id="hr_rule_rod_adm" model="hr.salary.rule">
+<record id="hr_rule_rod_adm" model="hr.salary.rule">
             <field name="name">Rodamiento</field>
             <field name="sequence" eval="301"/>
             <field name="code">1103</field>
@@ -649,7 +693,7 @@ else:
             <field name="amount_python_compute">result = round(inputs.RODAMIENTO.amount / 30 * worked_days.WORK100.number_of_days)</field>
         </record>
 
-        <record id="hr_rule_rod_ven" model="hr.salary.rule">
+<record id="hr_rule_rod_ven" model="hr.salary.rule">
             <field name="name">Rodamiento</field>
             <field name="sequence" eval="301"/>
             <field name="code">1203</field>
@@ -662,7 +706,7 @@ else:
             <field name="amount_python_compute">result = round(inputs.RODAMIENTO.amount / 30 * worked_days.WORK100.number_of_days)</field>
         </record>
 
-        <record id="hr_rule_rod_ops" model="hr.salary.rule">
+<record id="hr_rule_rod_ops" model="hr.salary.rule">
             <field name="name">Rodamiento</field>
             <field name="sequence" eval="301"/>
             <field name="code">1303</field>
@@ -672,11 +716,11 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = inputs.RODAMIENTO and inputs.RODAMIENTO.amount or False</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result=inputs.RODAMIENTO.amount</field>
+            <field name="amount_python_compute">result = round(inputs.RODAMIENTO.amount / 30 * worked_days.WORK100.number_of_days)</field>
         </record>
 
 <!-- up 21-->
-        <record id="hr_rule_com_adm" model="hr.salary.rule">
+<record id="hr_rule_com_adm" model="hr.salary.rule">
             <field name="name">Comision</field>
             <field name="sequence" eval="306"/>
             <field name="code">1104</field>
@@ -689,7 +733,7 @@ else:
             <field name="amount_python_compute">result=inputs.VENTAS.amount</field>
         </record>
 
-        <record id="hr_rule_com_ven" model="hr.salary.rule">
+<record id="hr_rule_com_ven" model="hr.salary.rule">
             <field name="name">Comision</field>
             <field name="sequence" eval="306"/>
             <field name="code">1204</field>
@@ -702,7 +746,7 @@ else:
             <field name="amount_python_compute">result=inputs.VENTAS.amount</field>
         </record>
 
-        <record id="hr_rule_com_ops" model="hr.salary.rule">
+<record id="hr_rule_com_ops" model="hr.salary.rule">
             <field name="name">Comision</field>
             <field name="sequence" eval="306"/>
             <field name="code">1304</field>
@@ -717,7 +761,7 @@ else:
 
 <!-- auxilio de transporte y subsidio familiar-->
 <!-- up 21-->
-        <record id="hr_rule_auxtra_adm" model="hr.salary.rule">
+<record id="hr_rule_auxtra_adm" model="hr.salary.rule">
             <field name="name">Subsidio de transporte</field>
             <field name="sequence" eval="400"/>
             <field name="code">1105</field>
@@ -728,10 +772,15 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = contract.wage &lt;= (2*employee.company.salario_minimo) or False</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
+            <field name="amount_python_compute">if worked_days.AUSENCIA_NO_REMUNERADO and worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+    if  worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+        x=worked_days.WORK100.number_of_days-1
+        result = round(x*employee.company.aux_transporte / 30)
+else:
+    result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
         </record>
 
-        <record id="hr_rule_auxtra_ven" model="hr.salary.rule">
+<record id="hr_rule_auxtra_ven" model="hr.salary.rule">
             <field name="name">Subsidio de transporte</field>
             <field name="sequence" eval="400"/>
             <field name="code">1205</field>
@@ -742,10 +791,15 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = contract.wage &lt;= (2*employee.company.salario_minimo) or False</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
+            <field name="amount_python_compute">if worked_days.AUSENCIA_NO_REMUNERADO and worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+    if  worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+        x=worked_days.WORK100.number_of_days-1
+        result = round(x*employee.company.aux_transporte / 30)
+else:
+    result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
         </record>
 
-        <record id="hr_rule_auxtra_ops" model="hr.salary.rule">
+<record id="hr_rule_auxtra_ops" model="hr.salary.rule">
             <field name="name">Subsidio de transporte</field>
             <field name="sequence" eval="400"/>
             <field name="code">1305</field>
@@ -755,11 +809,16 @@ else:
             <field name="condition_select">python</field>
             <field name="condition_python">result = contract.wage &lt;= (2*employee.company.salario_minimo) or False</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result = (worked_days.WORK100.number_of_days*employee.company.aux_transporte)/30</field>
+            <field name="amount_python_compute">if worked_days.AUSENCIA_NO_REMUNERADO and worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+    if  worked_days.AUSENCIA_NO_REMUNERADO.number_of_days:
+        x=worked_days.WORK100.number_of_days-1
+        result = round(x*employee.company.aux_transporte / 30)
+else:
+    result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
         </record>
 
 <!-- up 21-->
-        <record id="hr_rule_sub_famili_adm" model="hr.salary.rule">
+<record id="hr_rule_sub_famili_adm" model="hr.salary.rule">
             <field name="name">Subsidio familiar</field>
             <field name="sequence" eval="409"/>
             <field name="code">1106</field>
@@ -772,7 +831,7 @@ else:
             <field name="amount_python_compute">result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
         </record>
 
-        <record id="hr_rule_sub_famili_ven" model="hr.salary.rule">
+<record id="hr_rule_sub_famili_ven" model="hr.salary.rule">
             <field name="name">Subsidio familiar</field>
             <field name="sequence" eval="409"/>
             <field name="code">1206</field>
@@ -785,7 +844,7 @@ else:
             <field name="amount_python_compute">result = round(worked_days.WORK100.number_of_days*employee.company.aux_transporte / 30)</field>
         </record>
 
-        <record id="hr_rule_sub_famili_ops" model="hr.salary.rule">
+<record id="hr_rule_sub_famili_ops" model="hr.salary.rule">
             <field name="name">Subsidio familiar</field>
             <field name="sequence" eval="409"/>
             <field name="code">1306</field>
@@ -800,7 +859,7 @@ else:
 
 <!-- incapacidades-->
 <!-- up 21-->
-        <record id="hr_rule_inca_mat" model="hr.salary.rule">
+<record id="hr_rule_inca_mat" model="hr.salary.rule">
             <field name="name">Licencia maternidad</field>
             <field name="sequence" eval="507"/>
             <field name="code">1001</field>
@@ -813,7 +872,7 @@ else:
             <field name="amount_python_compute">result= round(contract.wage / 30 * worked_days.EPS_maternidad.number_of_days)</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_inca_arl" model="hr.salary.rule">
+<record id="hr_rule_inca_arl" model="hr.salary.rule">
             <field name="name">Licencia ARL</field>
             <field name="sequence" eval="505"/>
             <field name="code">1002</field>
@@ -826,7 +885,7 @@ else:
             <field name="amount_python_compute">result= round(contract.wage / 30 * worked_days.incapacidad_ARL.number_of_days)</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_inca_pat" model="hr.salary.rule">
+<record id="hr_rule_inca_pat" model="hr.salary.rule">
             <field name="name">Licencia Paternidad</field>
             <field name="sequence" eval="509"/>
             <field name="code">1003</field>
@@ -839,7 +898,7 @@ else:
             <field name="amount_python_compute">result= round(contract.wage / 30 * worked_days.EPS_paternidad.number_of_days)</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_inca_lut" model="hr.salary.rule">
+<record id="hr_rule_inca_lut" model="hr.salary.rule">
             <field name="name">Licencia Por Luto</field>
             <field name="sequence" eval="500"/>
             <field name="code">1004</field>
@@ -852,23 +911,22 @@ else:
             <field name="amount_python_compute">result= round(contract.wage / 30 * worked_days.luto.number_of_days)</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_inca_eps_100" model="hr.salary.rule">
-            <field name="name">Incapacidad EPS 100%</field>
-            <field name="sequence" eval="501"/>
-            <field name="code">1005</field>
-            <field name="rule_type">devengos</field>
-            <field name="account_debit" ref="l10n_co.co_puc_510524"/>
-            <field name="account_credit" ref="l10n_co.co_puc_250505"/>
-            <field name="category_id" ref="hr_payroll_categories_inca"/>
-            <field name="condition_select">python</field>
-            <field name="condition_python">result = (contract.execute_rules_leave_EPS(payslip))[0]</field>
-            <field name="amount_select">code</field>
-            <field name="amount_python_compute">diff = (contract.execute_rules_leave_EPS(payslip))[1]
+<record id="hr_rule_inca_eps_100" model="hr.salary.rule">
+    <field name="name">Incapacidad EPS 100%</field>
+    <field name="sequence" eval="501"/>
+    <field name="code">1005</field>
+    <field name="rule_type">devengos</field>
+    <field name="account_debit" ref="l10n_co.co_puc_510524"/>
+    <field name="category_id" ref="hr_payroll_categories_inca"/>
+    <field name="condition_select">python</field>
+    <field name="condition_python">result = (contract.execute_rules_leave_EPS(payslip))[0]</field>
+    <field name="amount_select">code</field>
+    <field name="amount_python_compute">diff = (contract.execute_rules_leave_EPS(payslip))[1]
 eps_days = diff
-x=((contract._get_last_month(payslip,["SUELDO", "inc"])))
+x=((contract._get_last_month(payslip,["SUELDO"])))
 if eps_days > 2:
     if x > 1:
-        x=(((contract._get_last_month(payslip,["SUELDO", "inc"])))/30)*diff
+        x=(((contract._get_last_month(payslip,["SUELDO"])))/30)*diff
         if (x/2) &lt; employee.company.salario_minimo/30:
             result=employee.company.salario_minimo/30*diff
         else:
@@ -881,37 +939,36 @@ if eps_days > 2:
             result = x
 else:
     if x > 1:
-        x = ((((contract._get_last_month(payslip,["SUELDO", "inc"])))/30)*eps_days)*0.6667
+        x = (((contract._get_last_month(payslip,["SUELDO"])))/30)*eps_days
         if (x/eps_days) &lt; employee.company.salario_minimo/30:
             result=employee.company.salario_minimo/30*eps_days
         else:
             result=x
     else:
-        x = ((contract.wage/30)*eps_days)*0.6667
+        x = (contract.wage/30)*eps_days
         if (x/eps_days) &lt; employee.company.salario_minimo/30:
             result=employee.company.salario_minimo/30*eps_days
         else:
             result=x</field>
-        </record>
+</record>
 <!-- up 21-->
-        <record id="hr_rule_inca_eps_66" model="hr.salary.rule">
-                    <field name="name">Incapacidad EPS 66%</field>
-                    <field name="sequence" eval="502"/>
-                    <field name="code">1006</field>
-                    <field name="rule_type">devengos</field>
-                    <field name="account_debit" ref="l10n_co.co_puc_138095"/>
-            <field name="account_credit" ref="l10n_co.co_puc_250505"/>
-                    <field name="category_id" ref="hr_payroll_categories_inca"/>
-                    <field name="condition_select">python</field>
-                    <field name="condition_python">result = (contract.execute_rules_leave_EPS(payslip))[2]</field>
-                    <field name="amount_select">code</field>
-                    <field name="amount_python_compute">diff = result = contract.execute_rules_leave_EPS(payslip)
+<record id="hr_rule_inca_eps_66" model="hr.salary.rule">
+            <field name="name">Incapacidad EPS 66%</field>
+            <field name="sequence" eval="502"/>
+            <field name="code">1006</field>
+            <field name="rule_type">devengos</field>
+            <field name="account_debit" ref="l10n_co.co_puc_138095"/>
+            <field name="category_id" ref="hr_payroll_categories_inca"/>
+            <field name="condition_select">python</field>
+            <field name="condition_python">result = contract.execute_rules_leave_EPS(payslip)[2]</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">diff = contract.execute_rules_leave_EPS(payslip)
 number_of_days = (contract.execute_rules_leave_EPS(payslip))[3]
 
-x=((contract._get_last_month(payslip,["SUELDO", "inc"])))
+x=((contract._get_last_month(payslip,["SUELDO"])))
 if x>1:
     result = x
-    x=((((contract._get_last_month(payslip,["SUELDO", "inc"])))/30)*(number_of_days))*0.6667
+    x=((((contract._get_last_month(payslip,["SUELDO"])))/30)*(number_of_days))*0.6667
     if (x/(number_of_days)) &lt; (employee.company.salario_minimo/30):
         result=(employee.company.salario_minimo/30) * (number_of_days)
     else:
@@ -926,7 +983,7 @@ else:
 
 <!-- horas extras-->
 <!-- up 21-->
-        <record id="hr_rule_recargo_nocturno_adm" model="hr.salary.rule">
+<record id="hr_rule_recargo_nocturno_adm" model="hr.salary.rule">
             <field name="name">Recargo nocturno</field>
             <field name="sequence" eval="204"/>
             <field name="code">1107-1</field>
@@ -939,7 +996,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "recargo_nocturno")))*0.35)</field>
         </record>
 
-        <record id="hr_rule_recargo_nocturno_ven" model="hr.salary.rule">
+<record id="hr_rule_recargo_nocturno_ven" model="hr.salary.rule">
             <field name="name">Recargo nocturno</field>
             <field name="sequence" eval="204"/>
             <field name="code">1207-1</field>
@@ -952,7 +1009,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "recargo_nocturno")))*0.35)</field>
         </record>
 
-        <record id="hr_rule_recargo_nocturno_ops" model="hr.salary.rule">
+<record id="hr_rule_recargo_nocturno_ops" model="hr.salary.rule">
             <field name="name">Recargo nocturno</field>
             <field name="sequence" eval="204"/>
             <field name="code">1307-1</field>
@@ -965,6 +1022,7 @@ else:
             <field name="amount_python_compute">result =(((contract.wage/30)/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "recargo_nocturno")))*0.35</field>
         </record>
 
+<!-- up 21-->
         <record id="hr_rule_hora_extra_nocturna_adm" model="hr.salary.rule">
             <field name="name">Hora extra nocturna</field>
             <field name="sequence" eval="202"/>
@@ -978,7 +1036,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30)/8*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_nocturno")))*1.75)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_nocturna_ven" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_nocturna_ven" model="hr.salary.rule">
             <field name="name">Hora extra nocturna</field>
             <field name="sequence" eval="202"/>
             <field name="code">1207-2</field>
@@ -991,7 +1049,8 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30)/8*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_nocturno")))*1.75)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_nocturna_ops" model="hr.salary.rule">
+
+<record id="hr_rule_hora_extra_nocturna_ops" model="hr.salary.rule">
             <field name="name">Hora extra nocturna</field>
             <field name="sequence" eval="202"/>
             <field name="code">1307-2</field>
@@ -1004,7 +1063,7 @@ else:
             <field name="amount_python_compute">result =(((contract.wage/30)/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_nocturno")))*1.75</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_h_diurna_festiva_adm" model="hr.salary.rule">
+<record id="hr_rule_h_diurna_festiva_adm" model="hr.salary.rule">
             <field name="name">Hora diurna festiva</field>
             <field name="sequence" eval="206"/>
             <field name="code">1107-3</field>
@@ -1030,7 +1089,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "h_diurna_festiva")))*1.75)</field>
         </record>
 
-        <record id="hr_rule_h_diurna_festiva_ops" model="hr.salary.rule">
+<record id="hr_rule_h_diurna_festiva_ops" model="hr.salary.rule">
             <field name="name">Hora diurna festiva</field>
             <field name="sequence" eval="206"/>
             <field name="code">1307-3</field>
@@ -1043,13 +1102,12 @@ else:
             <field name="amount_python_compute">result =(((contract.wage/30)/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "h_diurna_festiva")))*1.75</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_hora_extra_diurno_normal_adm" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_diurno_normal_adm" model="hr.salary.rule">
             <field name="name">Hora extra diurno normal</field>
             <field name="sequence" eval="201"/>
             <field name="code">1107-4</field>
             <field name="rule_type">devengos</field>
             <field name="account_debit" ref="l10n_co.co_puc_510515"/>
-            <field name="account_credit" ref="l10n_co.co_puc_250505"/>
             <field name="category_id" ref="hr_payroll_categories_horas_extra"/>
             <field name="condition_select">python</field>
             <field name="condition_python">result = employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_diurna_normal") != 0</field>
@@ -1057,7 +1115,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_diurna_normal")))*1.25)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_diurno_normal_ven" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_diurno_normal_ven" model="hr.salary.rule">
             <field name="name">Hora extra diurno normal</field>
             <field name="sequence" eval="201"/>
             <field name="code">1207-4</field>
@@ -1070,7 +1128,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_diurna_normal")))*1.25)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_diurno_normal_ops" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_diurno_normal_ops" model="hr.salary.rule">
             <field name="name">Hora extra diurno normal</field>
             <field name="sequence" eval="201"/>
             <field name="code">1307-4</field>
@@ -1084,7 +1142,7 @@ else:
         </record>
 
 <!-- up 21-->
-        <record id="hr_rule_recargo_nocturna_f_d_adm" model="hr.salary.rule">
+<record id="hr_rule_recargo_nocturna_f_d_adm" model="hr.salary.rule">
             <field name="name">Recargo nocturno festivo y dominical</field>
             <field name="sequence" eval="205"/>
             <field name="code">1107-5</field>
@@ -1097,7 +1155,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "recargo_nocturna_f_d")))*2.1)</field>
         </record>
 
-        <record id="hr_rule_recargo_nocturna_f_d_ven" model="hr.salary.rule">
+<record id="hr_rule_recargo_nocturna_f_d_ven" model="hr.salary.rule">
             <field name="name">Recargo nocturno festivo y dominical</field>
             <field name="sequence" eval="205"/>
             <field name="code">1207-5</field>
@@ -1110,7 +1168,7 @@ else:
             <field name="amount_python_compute">result =round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "recargo_nocturna_f_d")))*2.1)</field>
         </record>
 
-        <record id="hr_rule_recargo_nocturna_f_d_ops" model="hr.salary.rule">
+<record id="hr_rule_recargo_nocturna_f_d_ops" model="hr.salary.rule">
             <field name="name">Recargo nocturno festivo y dominical</field>
             <field name="sequence" eval="205"/>
             <field name="code">1307-5</field>
@@ -1123,7 +1181,7 @@ else:
             <field name="amount_python_compute">result =(((contract.wage/30)/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "recargo_nocturna_f_d")))*2.1</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_hora_extra_diurna_festiva_adm" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_diurna_festiva_adm" model="hr.salary.rule">
             <field name="name">Hora extra diurna domingos y festivo</field>
             <field name="sequence" eval="200"/>
             <field name="code">1107-6</field>
@@ -1136,7 +1194,7 @@ else:
             <field name="amount_python_compute">result =round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_diurna_festiva")))*2)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_diurna_festiva_ven" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_diurna_festiva_ven" model="hr.salary.rule">
             <field name="name">Hora extra diurna domingos y festivo</field>
             <field name="sequence" eval="200"/>
             <field name="code">1207-6</field>
@@ -1149,7 +1207,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_diurna_festiva")))*2)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_diurna_festiva_ops" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_diurna_festiva_ops" model="hr.salary.rule">
             <field name="name">Hora extra diurna domingos y festivo</field>
             <field name="sequence" eval="200"/>
             <field name="code">1307-6</field>
@@ -1162,7 +1220,7 @@ else:
             <field name="amount_python_compute">result =(((contract.wage/30)/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "hora_extra_diurna_festiva")))*2</field>
         </record>
 <!-- up 21-->
-        <record id="hr_rule_hora_extra_nocturna_festiva_adm" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_nocturna_festiva_adm" model="hr.salary.rule">
             <field name="name">Hora extra nocturna domingos y festivo</field>
             <field name="sequence" eval="203"/>
             <field name="code">1107-7</field>
@@ -1175,7 +1233,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "trabajo_extra_nocturno_domingos_festivos")))*2.5)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_nocturna_festiva_ven" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_nocturna_festiva_ven" model="hr.salary.rule">
             <field name="name">Hora extra nocturna domingos y festivo</field>
             <field name="sequence" eval="203"/>
             <field name="code">1207-7</field>
@@ -1188,7 +1246,7 @@ else:
             <field name="amount_python_compute">result = round(((contract.wage/30/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "trabajo_extra_nocturno_domingos_festivos")))*2.5)</field>
         </record>
 
-        <record id="hr_rule_hora_extra_nocturna_festiva_ops" model="hr.salary.rule">
+<record id="hr_rule_hora_extra_nocturna_festiva_ops" model="hr.salary.rule">
             <field name="name">Hora extra nocturna domingos y festivo</field>
             <field name="sequence" eval="203"/>
             <field name="code">1307-7</field>
@@ -1201,7 +1259,7 @@ else:
             <field name="amount_python_compute">result =(((contract.wage/30)/8)*(employee.get_overtime(employee.id,payslip.date_from,payslip.date_to, "trabajo_extra_nocturno_domingos_festivos")))*2.5</field>
         </record>
 
-        <record id="hr_rule_Prima_de_ser" model="hr.salary.rule">
+<record id="hr_rule_Prima_de_ser" model="hr.salary.rule">
             <field name="name">Prima De servicio</field>
             <field name="sequence" eval="709"/>
             <field name="code">1118</field>
@@ -1216,7 +1274,6 @@ else:
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result = contract._calculate_payment_prima(payslip.date_to) + categories.pro_pri</field>
         </record>
-
 
 <record id="hr_rule_Prima_de_ser_ven" model="hr.salary.rule">
             <field name="name">Prima De servicio</field>
@@ -1253,8 +1310,8 @@ else:
 <!-- deducciones-->
 
 <record id="hr_rule_sal" model="hr.salary.rule">
-            <field name="name">Salud Empleado</field>
-            <field name="sequence" eval="809"/>
+            <field name="name">Salud empleado</field>
+            <field name="sequence" eval="805"/>
             <field name="code">1008</field>
             <field name="rule_type">deducciones</field>
             <field name="account_credit" ref="l10n_co.co_puc_237005"/>
@@ -1281,7 +1338,7 @@ else:
         </record>
     
     <record id="hr_rule_pen" model="hr.salary.rule">
-            <field name="name">Pension Empleado</field>
+            <field name="name">Pension Trabajador</field>
             <field name="sequence" eval="808"/>
             <field name="code">1009</field>
             <field name="rule_type">deducciones</field>
@@ -1290,10 +1347,8 @@ else:
             <field name="category_id" ref="hr_payroll_categories_pen"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">if contract.contract_type == "5":
-    result = 0
-elif contract.rodamiento_es_prestacional and contract.bono_es_prestacional and contract.comision_es_prestacional:
-    result=round(((contract.wage/30)*worked_days.WORK100.number_of_days)*0.04+(categories.HORAS_EXTRAS*0.04)+(categories.ajs*0.04)+(categories.rod*0.04)+((categories.inc+categories.mat+categories.pat+categories.luto)*0.04)+(categories.com*0.04)+(categories.bono*0.04))
+            <field name="amount_python_compute">if contract.rodamiento_es_prestacional and contract.bono_es_prestacional and contract.comision_es_prestacional:
+                result=round(((contract.wage/30)*worked_days.WORK100.number_of_days)*0.04+(categories.HORAS_EXTRAS*0.04)+(categories.ajs*0.04)+(categories.rod*0.04)+((categories.inc+categories.mat+categories.pat+categories.luto)*0.04)+(categories.com*0.04)+(categories.bono*0.04))
 elif contract.bono_es_prestacional and contract.rodamiento_es_prestacional:
     result=round(((contract.wage/30)*worked_days.WORK100.number_of_days)*0.04+(categories.HORAS_EXTRAS*0.04)+(categories.ajs*0.04)+((categories.inc+categories.mat+categories.pat+categories.luto)*0.04)+(categories.bono*0.04)+(categories.rod*0.04))
 elif contract.rodamiento_es_prestacional and contract.comision_es_prestacional:
@@ -1329,11 +1384,10 @@ else:
 
     <record id="hr_rule_fsp" model="hr.salary.rule">
             <field name="name">FSP</field>
-            <field name="sequence" eval="805"/>
+            <field name="sequence" eval="809"/>
             <field name="code">1011</field>
             <field name="rule_type">deducciones</field>
             <field name="account_credit" ref="l10n_co.co_puc_238030"/>
-            <field name="account_debit" ref="l10n_co.co_puc_250505"/>
             <field name="category_id" ref="hr_payroll_categories_fsp"/>
             <field name="condition_select">python</field>
             <field name="condition_python">if contract.rodamiento_es_prestacional and contract.bono_es_prestacional and contract.comision_es_prestacional:
@@ -1374,7 +1428,7 @@ else:
 <record id="hr_rule_ded_dep" model="hr.salary.rule">
             <field name="name">Deduccion dependiente</field>
             <field name="sequence" eval="833"/>
-            <field name="code">ded_pen</field>
+            <field name="code">1007</field>
             <field name="rule_type">deducciones</field>
             <field name="category_id" ref="hr_payroll_categories_ded_dep"/>
             <field name="condition_select">python</field>
@@ -1396,26 +1450,70 @@ else:
             <field name="amount_python_compute">result=inputs.des.amount</field>
         </record>
 
-<record id="hr_rule_prestamo" model="hr.salary.rule">
+        <record id="hr_rule_prestamo" model="hr.salary.rule">
             <field name="name">Préstamos</field>
             <field name="sequence" eval="835"/>
             <field name="code">1013</field>
             <field name="rule_type">deducciones</field>
-            <!--field name="account_credit" ref="l10n_co.co_puc_136595"/-->
+            <field name="account_credit" ref="l10n_co.co_puc_136525"/>
+            <field name="account_debit" ref="l10n_co.co_puc_250505"/>
             <field name="category_id" ref="hr_payroll_prestamo"/>
             <field name="condition_select">python</field>
             <field name="condition_python">result=inputs.LO and inputs.LO.amount</field>
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result = -(inputs.LO and - (inputs.LO.amount))</field>
         </record>
+
         <record id="hr_rule_input_loan" model="hr.rule.input">
             <field name="code">LO</field>
-            <field name="name">Loan</field>
+            <field name="name">Préstamos</field>
             <field name="input_id" ref="hr_rule_prestamo"/>
         </record>
 
-<record id="hr_rule_retefuente" model="hr.salary.rule">
-            <field name="name">Retencion en la fuente</field>
+<!-- advance salary rule -->
+        <record id="hr_payslip_rule_advance" model="hr.salary.rule">
+            <field name="code">1015</field>
+            <field name="name">Anticipo de Salario</field>
+            <field name="category_id" ref="hr_payroll.DED"/>
+            <field name="condition_select">python</field>
+            <field name="account_credit" ref="l10n_co.co_puc_133015"/>
+            <field name="account_debit" ref="l10n_co.co_puc_250505"/>
+            <field name="condition_python">result = inputs.SAR and - (inputs.SAR.amount) or False</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = inputs.SAR and - (inputs.SAR.amount)</field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="sequence" eval="810"/>
+        </record>
+
+        <record id="hr_payslip_pago_teceros" model="hr.salary.rule">
+            <field name="code">1016</field>
+            <field name="name">Pago Terceros</field>
+            <field name="rule_type">deducciones</field>
+            <field name="category_id" ref="hr_payroll.DED"/>
+            <field name="account_credit" ref="account_extra.co_puc_281505"/>
+            <field name="account_debit" ref="l10n_co.co_puc_250505"/>
+            <field name="condition_select">python</field>            
+            <field name="condition_python">result = inputs.PagosTerceros and inputs.PagosTerceros.amount or False</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = inputs.PagosTerceros and inputs.PagosTerceros.amount</field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="sequence" eval="815"/>
+        </record>
+
+        <record id="hr_rule_input_pago_teceros" model="hr.rule.input">
+            <field name="code">PagosTerceros</field>
+            <field name="name">Pago Terceros</field>
+            <field name="input_id" ref="hr_payslip_pago_teceros"/>
+        </record>
+
+        <record id="hr_rule_input_advance" model="hr.rule.input">
+            <field name="code">SAR</field>
+            <field name="name">Anticipo de Salario</field>
+            <field name="input_id" ref="hr_payslip_rule_advance"/>
+        </record>
+
+        <record id="hr_rule_retefuente" model="hr.salary.rule">
+            <field name="name">Retención en la fuente</field>
             <field name="sequence" eval="840"/>
             <field name="code">1014</field>
             <field name="rule_type">deducciones</field>
@@ -1486,7 +1584,7 @@ else:
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
 
-            <field name="amount_python_compute">result = categories.SAL + categories.PEN + categories.FSP + categories.RETEfuente+categories.apen+categories.des+categories.DED</field>
+            <field name="amount_python_compute">result = categories.SAL + categories.PEN + categories.FSP + categories.RETEfuente+categories.apen+categories.des+categories.DED + categories.lo</field>
 
         </record>
 
@@ -1589,8 +1687,8 @@ else:
 <record id="hr_rule_provi_vac_adm" model="hr.salary.rule">
             <field name="name">Provisión Vacaciones</field>
             <field name="sequence" eval="701"/>
-            <field name="code">1117</field>
             <field name="rule_type">none</field>
+            <field name="code">1117</field>
             <field name="account_debit" ref="l10n_co.co_puc_510539"/>
             <field name="account_credit" ref="l10n_co.co_puc_261015"/>
             <field name="category_id" ref="hr_payroll_pro_vac"/>
@@ -1687,7 +1785,7 @@ elif contract.bono_es_prestacional and contract.rodamiento_es_prestacional:
 elif contract.rodamiento_es_prestacional and contract.comision_es_prestacional:
     result=round((((((contract.wage /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days)+categories.inc+(categories.ajs)+categories.rod+categories.com))+categories.luto+categories.mat+categories.pat+categories.AUX_TRANSPORTE+categories.HORAS_EXTRAS))*(30/360))
 elif contract.bono_es_prestacional and contract.comision_es_prestacional:
-    result=round((((((contract.wage /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days)+categories.inc+(categories.ajs)+categories.bono+categories.com))+categories.luto+categories.mat+categories.pat+categories.AUX_TRANSPORTE+categories.HORAS_EXTRAS))*(30/360))
+    result=round((((((contract.wage /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days)+categories.inc+(categories.ajs)+categories.bono+categories.com))+categories.luto+categories.mat+categories.pat+ecategories.AUX_TRANSPORTE+categories.HORAS_EXTRAS))*(30/360))
 elif contract.rodamiento_es_prestacional:
     result=round((((((contract.wage /30) * (worked_days.WORK100 and worked_days.WORK100.number_of_days)+categories.inc+(categories.ajs)+categories.rod))+categories.luto+categories.mat+categories.pat+categories.AUX_TRANSPORTE+categories.HORAS_EXTRAS))*(30/360))
 elif contract.bono_es_prestacional:
@@ -2060,7 +2158,7 @@ else:
 
         <record id="hr_rule_pro_cesa_ven" model="hr.salary.rule">
             <field name="name">Provision Cesantias</field>
-            <field name="sequence" eval="702"/>
+            <field name="sequence" eval="1001"/>
             <field name="code">1211</field>
             <field name="rule_type">none</field>
             <field name="account_debit" ref="l10n_co.co_puc_520530"/>
@@ -2086,11 +2184,11 @@ else:
     result= round(((contract.wage /30 * (worked_days.WORK100 and worked_days.WORK100.number_of_days)) + categories.inc + categories.ajs + categories.luto + categories.mat + categories.pat + categories.AUX_TRANSPORTE + categories.HORAS_EXTRAS)*(30/360))</field>
         </record>
 
-        <record id="hr_rule_pro_cesa_ops" model="hr.salary.rule">
+<record id="hr_rule_pro_cesa_ops" model="hr.salary.rule">
             <field name="name">Provision Cesantias</field>
-            <field name="sequence" eval="702"/>
+            <field name="sequence" eval="1001"/>
             <field name="code">1311</field>
-            <field name="rule_type">none</field>
+            <field name="rule_type">devengos</field>
             <field name="account_debit" ref="account_extra.co_puc_720530"/>
             <field name="account_credit" ref="l10n_co.co_puc_261005"/>
             <field name="category_id" ref="hr_payroll_pro_ces"/>
@@ -2124,12 +2222,12 @@ else:
             <field name="category_id" ref="hr_payroll_pro_in_ces"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result=categories.pcesan*0.12</field>
+            <field name="amount_python_compute">result = round(categories.pcesan*0.12)</field>
         </record>
 
 <record id="hr_rule_pro_incesa_ven" model="hr.salary.rule">
             <field name="name">Provision Interes Cesantias</field>
-            <field name="sequence" eval="703"/>
+            <field name="sequence" eval="1002"/>
             <field name="code">1212</field>
             <field name="rule_type">none</field>
             <field name="account_debit" ref="l10n_co.co_puc_520533"/>
@@ -2137,12 +2235,24 @@ else:
             <field name="category_id" ref="hr_payroll_pro_in_ces"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">result=categories.pcesan*0.12</field>
+            <field name="amount_python_compute">result = round(categories.pcesan*0.12)</field>
+        </record>
+
+<record id="hr_rule_bono_epctvs_pagoNS" model="hr.salary.rule">
+            <field name="name">BonoEPCTV No Salarial</field>
+            <field name="sequence" eval="306"/>
+            <field name="code">2110</field>
+            <field name="rule_type">devengos</field>
+            <field name="category_id" ref="hr_payroll_categories_bon"/>
+            <field name="condition_select">python</field>
+            <field name="condition_python">result = inputs.PagoNS and inputs.PagoNS.amount or False</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = inputs.PagoNS.amount</field>
         </record>
 
 <record id="hr_rule_pro_incesa_ops" model="hr.salary.rule">
             <field name="name">Provision Interes Cesantias</field>
-            <field name="sequence" eval="703"/>
+            <field name="sequence" eval="1002"/>
             <field name="code">1312</field>
             <field name="rule_type">none</field>
             <field name="account_debit" ref="account_extra.co_puc_720572"/>
@@ -2154,7 +2264,7 @@ else:
         </record>
 
 <record id="hr_rule_sal_emp_adm" model="hr.salary.rule">
-            <field name="name">Salud Empresa</field>
+            <field name="name">Salud empresa</field>
             <field name="sequence" eval="1002"/>
             <field name="code">1113</field>
             <field name="rule_type">none</field>
@@ -2182,7 +2292,7 @@ else:
         </record>
 
 <record id="hr_rule_sal_emp_ven" model="hr.salary.rule">
-            <field name="name">Salud Empresa</field>
+            <field name="name">Salud empresa</field>
             <field name="sequence" eval="1002"/>
             <field name="code">1213</field>
             <field name="rule_type">none</field>
@@ -2210,7 +2320,7 @@ else:
         </record>
 
 <record id="hr_rule_sal_emp_ops" model="hr.salary.rule">
-            <field name="name">Salud Empresa</field>
+            <field name="name">Salud empresa</field>
             <field name="sequence" eval="1002"/>
             <field name="code">1313</field>
             <field name="rule_type">none</field>
@@ -2252,7 +2362,7 @@ else:
         </record>
 
 <record id="hr_rule_aporte_pension_empresa_ven" model="hr.salary.rule">
-            <field name="name">Aporte Pension Empresa</field>
+            <field name="name">Aporte pension empresa</field>
             <field name="sequence" eval="1021"/>
             <field name="code">1214</field>
             <field name="rule_type">none</field>
@@ -2266,7 +2376,7 @@ else:
         </record>
 
 <record id="hr_rule_aporte_pension_empresa_ops" model="hr.salary.rule">
-            <field name="name">Aporte Pension Empresa</field>
+            <field name="name">Aporte pension empresa</field>
             <field name="sequence" eval="1021"/>
             <field name="code">1314</field>
             <field name="rule_type">none</field>
@@ -2280,7 +2390,7 @@ else:
         </record>
 
 <record id="hr_rule_pen_empres_adm" model="hr.salary.rule">
-            <field name="name">Pensión Empresa</field>
+            <field name="name">Pension Empresa</field>
             <field name="sequence" eval="1022"/>
             <field name="code">1115</field>
             <field name="rule_type">none</field>
@@ -2308,7 +2418,7 @@ else:
         </record>
 
 <record id="hr_rule_pen_empres_ven" model="hr.salary.rule">
-            <field name="name">Pensión Empresa</field>
+            <field name="name">Pension Empresa</field>
             <field name="sequence" eval="1022"/>
             <field name="code">1215</field>
             <field name="rule_type">none</field>
@@ -2336,7 +2446,7 @@ else:
         </record>
 
 <record id="hr_rule_pen_empres_ops" model="hr.salary.rule">
-            <field name="name">Pensión Empresa</field>
+            <field name="name">Pension Empresa</field>
             <field name="sequence" eval="1022"/>
             <field name="code">1315</field>
             <field name="rule_type">none</field>
@@ -2378,19 +2488,19 @@ else:
     <record id="hr_rule_baux" model="hr.salary.rule">
         <field name="name">Base Subsidio de transporte</field>
         <field name="sequence" eval="500"/>
-        <field name="code">111</field>
+        <field name="code">1509</field>
         <field name="rule_type">none</field>
         <field name="category_id" ref="hr_payroll_baux"/>
         <field name="condition_select">python</field>
         <field name="condition_python">result = contract.wage &lt;= (2*employee.company.salario_minimo) or False</field>
         <field name="amount_select">code</field>
-        <field name="amount_python_compute">result=employee.company.aux_transporte</field>
+        <field name="amount_python_compute">result = employee.company.aux_transporte</field>
     </record>
 
     <record id="hr_rule_base_sal" model="hr.salary.rule">
         <field name="name">Base salario</field>
         <field name="sequence" eval="5"/>
-        <field name="code">121</field>
+        <field name="code">1510</field>
         <field name="rule_type">none</field>
         <field name="category_id" ref="hr_payroll_categories_basesal"/>
         <field name="condition_select">none</field>
@@ -2407,67 +2517,64 @@ else:
         <field name="name">Nomina Administracion</field>
         <field name="parent_id"></field>
         <field eval="[(6, 0, [
-
-         ref('hr_rule_cesan'),
-
-                ref('hr_rule_incesan'),
-                        
-                ref('hr_rule_salario_minimo'),
-                ref('hr_rule_salario_UVT'),         
-                ref('hr_rule_SALARIO_adm'),
-                ref('hr_rule_ajuste_sal_adm'),
-                ref('hr_rule_bon_adm'),
-                ref('hr_rule_rod_adm'),
-                ref('hr_rule_com_adm'),
-                ref('hr_rule_auxtra_adm'),
-                ref('hr_rule_sub_famili_adm'),
-                ref('hr_rule_recargo_nocturno_adm'),
-                ref('hr_rule_hora_extra_nocturna_adm'),
-                ref('hr_rule_h_diurna_festiva_adm'),
-                ref('hr_rule_hora_extra_diurno_normal_adm'),
-                ref('hr_rule_recargo_nocturna_f_d_adm'),
-                ref('hr_rule_hora_extra_diurna_festiva_adm'),
-                ref('hr_rule_hora_extra_nocturna_festiva_adm'),
-                ref('hr_rule_total_caja_com_adm'),
-                ref('hr_rule_pro_prima_adm'),
-                ref('hr_rule_pro_ARL_adm'),
-                ref('hr_rule_pro_incesa_adm'),
-                ref('hr_rule_sal_emp_adm'),
-                ref('hr_rule_aporte_pension_empresa_adm'),
-                ref('hr_rule_pen_empres_adm'),
-                ref('hr_rule_vac_adm'),
-                ref('hr_rule_provi_vac_adm'),
-                ref('hr_rule_inca_mat'),
-                ref('hr_rule_inca_arl'),
-                ref('hr_rule_inca_pat'),
-                ref('hr_rule_inca_lut'),
-                ref('hr_rule_inca_eps_100'),
-                ref('hr_rule_inca_eps_66'),
-                ref('hr_rule_Prima_de_ser'),
-                ref('hr_rule_Prima_de_ser_2'),
-                ref('hr_rule_pro_cesa'),
-                ref('hr_rule_sal'),
-                ref('hr_rule_pen'),
-                ref('hr_rule_apen'),
-                ref('hr_rule_fsp'),
-                ref('hr_rule_descuentos'),
+                ref('hr_rule_cesan'),
+				ref('hr_rule_incesan'),
+						
+				ref('hr_rule_SALARIO_adm'),
+				ref('hr_rule_ajuste_sal_adm'),
+				ref('hr_rule_bon_adm'),
+				ref('hr_rule_rod_adm'),
+				ref('hr_rule_com_adm'),
+				ref('hr_rule_auxtra_adm'),
+				ref('hr_rule_sub_famili_adm'),
+				ref('hr_rule_recargo_nocturno_adm'),
+				ref('hr_rule_hora_extra_nocturna_adm'),
+				ref('hr_rule_h_diurna_festiva_adm'),
+				ref('hr_rule_hora_extra_diurno_normal_adm'),
+				ref('hr_rule_recargo_nocturna_f_d_adm'),
+				ref('hr_rule_hora_extra_diurna_festiva_adm'),
+				ref('hr_rule_hora_extra_nocturna_festiva_adm'),
+				ref('hr_rule_total_caja_com_adm'),
+				ref('hr_rule_pro_prima_adm'),
+				ref('hr_rule_pro_ARL_adm'),
+				ref('hr_rule_pro_incesa_adm'),
+				ref('hr_rule_sal_emp_adm'),
+				ref('hr_rule_aporte_pension_empresa_adm'),
+				ref('hr_rule_pen_empres_adm'),
+				ref('hr_rule_vac_adm'),
+				ref('hr_rule_provi_vac_adm'),
+				ref('hr_rule_inca_mat'),
+				ref('hr_rule_inca_arl'),
+				ref('hr_rule_inca_pat'),
+				ref('hr_rule_inca_lut'),
+				ref('hr_rule_inca_eps_100'),
+				ref('hr_rule_inca_eps_66'),
+				ref('hr_rule_Prima_de_ser'),
+				ref('hr_rule_pro_cesa'),
+                ref('hr_rule_bono_epctvs'),
+				ref('hr_rule_sal'),
+				ref('hr_rule_pen'),
                 ref('hr_rule_prestamo'),
-                ref('hr_rule_retefuente'),
-                ref('hr_rule_total_Horas_extras'),
+				ref('hr_rule_apen'),
+				ref('hr_rule_fsp'),
+				ref('hr_rule_descuentos'),
+				ref('hr_rule_retefuente'),
+				ref('hr_rule_total_Horas_extras'),
                 ref('hr_rule_total_devengado_liq'),
-
+                ref('hr_payslip_rule_advance'),
                 ref('hr_rule_base_vacac'),
                 ref('hr_rule_base_cesan'),
                 ref('hr_rule_base_prima'),
-
+                ref('hr_rule_base_horas_extra'),
                 ref('hr_rule_base_variable'),
                 ref('hr_rule_base_sub_transporte'),
                 ref('hr_rule_base_salario'),
+                ref('hr_payslip_pago_teceros'),
 
-                ref('hr_rule_total_devengado'),
-                ref('hr_rule_total_inc'),
-                ref('hr_rule_TOTAL_DEDUCCIONES'),
-                ref('hr_rule_TOTAL'),
+				ref('hr_rule_total_devengado'),
+				ref('hr_rule_total_inc'),
+				ref('hr_rule_TOTAL_DEDUCCIONES'),
+				ref('hr_rule_TOTAL'),
         ])]" name="rule_ids" />
         <field name="company_id" ref="base.main_company" />
     </record>
@@ -2478,124 +2585,118 @@ else:
         <field name="parent_id"></field>
         <field eval="[(6, 0, [
                 ref('hr_rule_cesan'),
-                ref('hr_rule_incesan'),
-                        
-                ref('hr_rule_salario_minimo'),
-                ref('hr_rule_salario_UVT'),         
-                ref('hr_rule_SALARIO_ven'),
-                ref('hr_rule_ajuste_sal_ven'),
-                ref('hr_rule_bon_ven'),
-                ref('hr_rule_rod_ven'),
-                ref('hr_rule_com_ven'),
-                ref('hr_rule_auxtra_ven'),
-                ref('hr_rule_sub_famili_ven'),
-                ref('hr_rule_recargo_nocturno_ven'),
-                ref('hr_rule_hora_extra_nocturna_ven'),
-                ref('hr_rule_h_diurna_festiva_ven'),
-                ref('hr_rule_hora_extra_diurno_normal_ven'),
-                ref('hr_rule_recargo_nocturna_f_d_ven'),
-                ref('hr_rule_hora_extra_diurna_festiva_ven'),
-                ref('hr_rule_hora_extra_nocturna_festiva_ven'),
-                ref('hr_rule_total_caja_com_ven'),
-                ref('hr_rule_pro_prima_ven'),
-                ref('hr_rule_pro_ARL_ven'),
-                ref('hr_rule_pro_incesa_ven'),
-                ref('hr_rule_sal_emp_ven'),
-                ref('hr_rule_aporte_pension_empresa_ven'),
-                ref('hr_rule_pen_empres_ven'),
+				ref('hr_rule_incesan'),
+						
+				ref('hr_rule_SALARIO_ven'),
+				ref('hr_rule_ajuste_sal_ven'),
+				ref('hr_rule_bon_ven'),
+				ref('hr_rule_rod_ven'),
+				ref('hr_rule_com_ven'),
+				ref('hr_rule_auxtra_ven'),
+				ref('hr_rule_sub_famili_ven'),
+				ref('hr_rule_recargo_nocturno_ven'),
+				ref('hr_rule_hora_extra_nocturna_ven'),
+				ref('hr_rule_h_diurna_festiva_ven'),
+				ref('hr_rule_hora_extra_diurno_normal_ven'),
+				ref('hr_rule_recargo_nocturna_f_d_ven'),
+				ref('hr_rule_hora_extra_diurna_festiva_ven'),
+				ref('hr_rule_hora_extra_nocturna_festiva_ven'),
+				ref('hr_rule_total_caja_com_ven'),
+				ref('hr_rule_pro_prima_ven'),
+				ref('hr_rule_pro_ARL_ven'),
+				ref('hr_rule_pro_incesa_ven'),
+				ref('hr_rule_sal_emp_ven'),
+				ref('hr_rule_aporte_pension_empresa_ven'),
+				ref('hr_rule_pen_empres_ven'),
+				ref('hr_rule_provi_vac_ven'),
+                ref('hr_payslip_rule_advance'),
+				ref('hr_rule_inca_mat'),
+				ref('hr_rule_inca_arl'),
+				ref('hr_rule_inca_pat'),
+				ref('hr_rule_inca_lut'),
+				ref('hr_rule_inca_eps_100'),
+				ref('hr_rule_inca_eps_66'),
+				ref('hr_rule_Prima_de_ser'),
 
-
-                ref('hr_rule_provi_vac_ven'),
-
-
-                ref('hr_rule_inca_mat'),
-                ref('hr_rule_inca_arl'),
-                ref('hr_rule_inca_pat'),
-                ref('hr_rule_inca_lut'),
-                ref('hr_rule_inca_eps_100'),
-                ref('hr_rule_inca_eps_66'),
-                ref('hr_rule_Prima_de_ser'),
-                ref('hr_rule_Prima_de_ser_2'),
-
-                ref('hr_rule_pro_cesa_ven'),
-                ref('hr_rule_sal'),
-                ref('hr_rule_pen'),
-                ref('hr_rule_apen'),
-                ref('hr_rule_fsp'),
-                ref('hr_rule_descuentos'),
+				ref('hr_rule_pro_cesa_ven'),
+				ref('hr_rule_sal'),
+				ref('hr_rule_pen'),
+				ref('hr_rule_apen'),
                 ref('hr_rule_prestamo'),
-                ref('hr_rule_retefuente'),
+				ref('hr_rule_fsp'),
+				ref('hr_rule_descuentos'),
+				ref('hr_rule_retefuente'),
                 ref('hr_rule_total_devengado_liq'),
+                ref('hr_payslip_pago_teceros'),
 
-                ref('hr_rule_total_Horas_extras'),
-                ref('hr_rule_total_devengado'),
-                ref('hr_rule_total_inc'),
-                ref('hr_rule_TOTAL_DEDUCCIONES'),
-                ref('hr_rule_TOTAL'),
+				ref('hr_rule_total_Horas_extras'),
+				ref('hr_rule_total_devengado'),
+				ref('hr_rule_total_inc'),
+				ref('hr_rule_TOTAL_DEDUCCIONES'),
+				ref('hr_rule_TOTAL'),
         ])]" name="rule_ids" />
         <field name="company_id" ref="base.main_company" />
     </record>
 
 
     <record id="hr_payroll_salary_structure_worker_produccion" model="hr.payroll.structure">
+
         <field name="code">nv</field>
         <field name="name">Nomina Producción</field>
         <field name="parent_id"></field>
         <field eval="[(6, 0, [
                 ref('hr_rule_cesan'),
-                ref('hr_rule_incesan'),
-                        
-                ref('hr_rule_salario_minimo'),
-                ref('hr_rule_salario_UVT'),         
-                ref('hr_rule_SALARIO_ops'),
-                ref('hr_rule_ajuste_sal_ops'),
-                ref('hr_rule_bon_ops'),
-                ref('hr_rule_rod_ops'),
-                ref('hr_rule_com_ops'),
-                ref('hr_rule_auxtra_ops'),
-                ref('hr_rule_sub_famili_ops'),
-                ref('hr_rule_recargo_nocturno_ops'),
-                ref('hr_rule_hora_extra_nocturna_ops'),
-                ref('hr_rule_h_diurna_festiva_ops'),
-                ref('hr_rule_hora_extra_diurno_normal_ops'),
-                ref('hr_rule_recargo_nocturna_f_d_ops'),
-                ref('hr_rule_hora_extra_diurna_festiva_ops'),
-                ref('hr_rule_hora_extra_nocturna_festiva_ops'),
-                ref('hr_rule_total_caja_com_ops'),
-                ref('hr_rule_pro_prima_ops'),
-                ref('hr_rule_pro_ARL_ops'),
-                ref('hr_rule_pro_incesa_ops'),
-                ref('hr_rule_sal_emp_ops'),
-                ref('hr_rule_aporte_pension_empresa_ops'),
-                ref('hr_rule_pen_empres_ops'),
-
-                ref('hr_rule_vac_ops'),
-                ref('hr_rule_provi_vac_ops'),
-
-
-                ref('hr_rule_inca_mat'),
-                ref('hr_rule_inca_arl'),
-                ref('hr_rule_inca_pat'),
-                ref('hr_rule_inca_lut'),
-                ref('hr_rule_inca_eps_100'),
-                ref('hr_rule_inca_eps_66'),
-                ref('hr_rule_Prima_de_ser'),
+				ref('hr_rule_incesan'),
+							
+				ref('hr_rule_SALARIO_ops'),
+				ref('hr_rule_ajuste_sal_ops'),
+				ref('hr_rule_bon_ops'),
+				ref('hr_rule_rod_ops'),
+				ref('hr_rule_com_ops'),
+				ref('hr_rule_auxtra_ops'),
+				ref('hr_rule_sub_famili_ops'),
+				ref('hr_rule_recargo_nocturno_ops'),
+				ref('hr_rule_hora_extra_nocturna_ops'),
+				ref('hr_rule_h_diurna_festiva_ops'),
+				ref('hr_rule_hora_extra_diurno_normal_ops'),
+				ref('hr_rule_recargo_nocturna_f_d_ops'),
+				ref('hr_rule_hora_extra_diurna_festiva_ops'),
+				ref('hr_rule_hora_extra_nocturna_festiva_ops'),
+				ref('hr_rule_total_caja_com_ops'),
+				ref('hr_rule_pro_prima_ops'),
+				ref('hr_rule_pro_ARL_ops'),
+				ref('hr_rule_pro_incesa_ops'),
+				ref('hr_rule_sal_emp_ops'),
+				ref('hr_rule_aporte_pension_empresa_ops'),
+				ref('hr_rule_pen_empres_ops'),
+                ref('hr_payslip_rule_advance'),
+				ref('hr_rule_vac_ops'),
+				ref('hr_rule_provi_vac_ops'),
+				ref('hr_rule_inca_mat'),
+				ref('hr_rule_inca_arl'),
+				ref('hr_rule_inca_pat'),
+				ref('hr_rule_inca_lut'),
+				ref('hr_rule_inca_eps_100'),
+				ref('hr_rule_inca_eps_66'),
+				ref('hr_rule_Prima_de_ser'),
+                ref('hr_rule_bono_epctvs_pagoNS'),
 
 
-                ref('hr_rule_pro_cesa'),
-                ref('hr_rule_sal'),
-                ref('hr_rule_pen'),
-                ref('hr_rule_apen'),
-                ref('hr_rule_fsp'),
-                ref('hr_rule_descuentos'),
+				ref('hr_rule_pro_cesa_ops'),
+				ref('hr_rule_sal'),
+				ref('hr_rule_pen'),
+				ref('hr_rule_apen'),
                 ref('hr_rule_prestamo'),
-                ref('hr_rule_retefuente'),
+				ref('hr_rule_fsp'),
+				ref('hr_rule_descuentos'),
+				ref('hr_rule_retefuente'),
+                ref('hr_payslip_pago_teceros'),
 
-                ref('hr_rule_total_Horas_extras'),
-                ref('hr_rule_total_devengado'),
-                ref('hr_rule_total_inc'),
-                ref('hr_rule_TOTAL_DEDUCCIONES'),
-                ref('hr_rule_TOTAL'),
+				ref('hr_rule_total_Horas_extras'),
+				ref('hr_rule_total_devengado'),
+				ref('hr_rule_total_inc'),
+				ref('hr_rule_TOTAL_DEDUCCIONES'),
+				ref('hr_rule_TOTAL'),
         ])]" name="rule_ids" />
         <field name="company_id" ref="base.main_company" />
     </record>
@@ -2610,4 +2711,5 @@ else:
         ])]" name="rule_ids" />
         <field name="company_id" ref="base.main_company" />
     </record>
+
 </odoo>
